@@ -24,16 +24,39 @@ namespace ClientDependency.Core.FileRegistration.Providers
                 name = DefaultName;
 
             base.Initialize(name, config);
-        }        
+        }
+
+        protected override string RenderJsPreloadDependencies(IEnumerable<IClientDependencyFile> jsPreloadDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override string RenderCssPreloadDependencies(
+            IEnumerable<IClientDependencyFile> cssPreloadDependencies,
+            HttpContextBase http,
+            IDictionary<string, string> htmlAttributes)
+        {
+            throw new System.NotImplementedException();
+        }
 
         protected override string RenderSingleJsFile(string js, IDictionary<string, string> htmlAttributes)
         {
             return string.Format(HtmlEmbedContants.ScriptEmbedWithSource, js, htmlAttributes.ToHtmlAttributes());
         }
 
+        protected override string RenderSingleJsPreloadFile(string jsPreload, IDictionary<string, string> htmlAttributes)
+        {
+            throw new System.NotImplementedException();
+        }
+
         protected override string RenderSingleCssFile(string css, IDictionary<string, string> htmlAttributes)
         {
             return string.Format(HtmlEmbedContants.CssEmbedWithSource, css, htmlAttributes.ToHtmlAttributes());
+        }
+
+        protected override string RenderSingleCssPreloadFile(string cssPreload, IDictionary<string, string> htmlAttributes)
+        {
+            throw new System.NotImplementedException();
         }
 
         /// <summary>

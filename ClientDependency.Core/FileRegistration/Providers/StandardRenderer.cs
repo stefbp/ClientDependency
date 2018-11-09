@@ -28,14 +28,25 @@ namespace ClientDependency.Core.FileRegistration.Providers
         /// <param name="allDependencies"></param>
         /// <param name="paths"></param>
         /// <param name="jsOutput"></param>
+        /// <param name="jsPreloadOutput"></param>
         /// <param name="cssOutput"></param>
+        /// <param name="cssPreloadOutput"></param>
         /// <param name="http"></param>
-        public override void RegisterDependencies(List<IClientDependencyFile> allDependencies, HashSet<IClientDependencyPath> paths, out string jsOutput, out string cssOutput, HttpContextBase http)
+        public override void RegisterDependencies(
+            List<IClientDependencyFile> allDependencies, 
+            HashSet<IClientDependencyPath> paths, 
+            out string jsOutput,
+            out string jsPreloadOutput,
+            out string cssOutput,
+            out string cssPreloadOutput, 
+            HttpContextBase http)
         {
-            base.RegisterDependencies(allDependencies, paths, out jsOutput, out cssOutput, http);
+            base.RegisterDependencies(allDependencies, paths, out jsOutput, out jsPreloadOutput, out cssOutput, out cssPreloadOutput, http);
 
             jsOutput = jsOutput.Replace("&", "&amp;");
+            jsPreloadOutput = jsPreloadOutput.Replace("&", "&amp;");
             cssOutput = cssOutput.Replace("&", "&amp;");
+            cssPreloadOutput = cssPreloadOutput.Replace("&", "&amp;");
         }
 
         protected override string RenderJsDependencies(IEnumerable<IClientDependencyFile> jsDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes)
@@ -65,7 +76,36 @@ namespace ClientDependency.Core.FileRegistration.Providers
             }
 
             return sb.ToString();
-        }        
+        }
+
+        protected override string RenderJsPreloadDependencies(IEnumerable<IClientDependencyFile> jsPreloadDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes)
+        {
+            if (!jsPreloadDependencies.Any())
+                return string.Empty;
+
+            var sb = new StringBuilder();
+
+            if (http.IsDebuggingEnabled || !EnableCompositeFiles)
+            {
+                foreach (var dependency in jsPreloadDependencies)
+                {
+                    sb.Append(RenderSingleJsPreloadFile(dependency.FilePath, htmlAttributes));
+                }
+            }
+            else if (DisableCompositeBundling)
+            {
+                foreach (var dependency in jsPreloadDependencies)
+                {
+                    RenderJsPreloadComposites(http, htmlAttributes, sb, Enumerable.Repeat(dependency, 1));
+                }
+            }
+            else
+            {
+                RenderJsPreloadComposites(http, htmlAttributes, sb, jsPreloadDependencies);
+            }
+
+            return sb.ToString();
+        }
 
         protected override string RenderCssDependencies(IEnumerable<IClientDependencyFile> cssDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes)
         {
@@ -96,9 +136,46 @@ namespace ClientDependency.Core.FileRegistration.Providers
             return sb.ToString();
         }
 
+        protected override string RenderCssPreloadDependencies(
+            IEnumerable<IClientDependencyFile> cssPreloadDependencies,
+            HttpContextBase http,
+            IDictionary<string, string> htmlAttributes)
+        {
+            if (!cssPreloadDependencies.Any())
+                return string.Empty;
+
+            var sb = new StringBuilder();
+
+            if (http.IsDebuggingEnabled || !EnableCompositeFiles)
+            {
+                foreach (var dependency in cssPreloadDependencies)
+                {
+                    sb.Append(RenderSingleCssPreloadFile(dependency.FilePath, htmlAttributes));
+                }
+            }
+            else if (DisableCompositeBundling)
+            {
+                foreach (var dependency in cssPreloadDependencies)
+                {
+                    RenderCssPreloadComposites(http, htmlAttributes, sb, Enumerable.Repeat(dependency, 1));
+                }
+            }
+            else
+            {
+                RenderCssPreloadComposites(http, htmlAttributes, sb, cssPreloadDependencies);
+            }
+
+            return sb.ToString();
+        }
+
         protected override string RenderSingleJsFile(string js, IDictionary<string, string> htmlAttributes)
         {
             return string.Format(HtmlEmbedContants.ScriptEmbedWithSource, js, htmlAttributes.ToHtmlAttributes());
+        }
+
+        protected override string RenderSingleJsPreloadFile(string jsPreload, IDictionary<string, string> htmlAttributes)
+        {
+            return string.Format(HtmlEmbedContants.ScriptPreloadEmbedWithSource, jsPreload, htmlAttributes.ToHtmlAttributes());
         }
 
         protected override string RenderSingleCssFile(string css, IDictionary<string, string> htmlAttributes)
@@ -106,5 +183,9 @@ namespace ClientDependency.Core.FileRegistration.Providers
             return string.Format(HtmlEmbedContants.CssEmbedWithSource, css, htmlAttributes.ToHtmlAttributes());
         }
 
+        protected override string RenderSingleCssPreloadFile(string cssPreload, IDictionary<string, string> htmlAttributes)
+        {
+            return string.Format(HtmlEmbedContants.CssPreloadEmbedWithSource, cssPreload, htmlAttributes.ToHtmlAttributes());
+        }
     }
 }

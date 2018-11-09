@@ -27,13 +27,25 @@ namespace ClientDependency.Core
         /// markup before the module calls this method to update the placeholders with 
         /// the real dependencies.
         /// </summary>
-        /// <param name="currentContext"></param>
-        /// <param name="html"></param>
-        /// <param name="jsMarkupRegex"></param>
-        /// <param name="cssMarkupRegex"></param>
-        /// <param name="output"></param>
-        /// <returns></returns>
-        public static string ParseHtmlPlaceholders(HttpContextBase currentContext, string html, string jsMarkupRegex, string cssMarkupRegex, RendererOutput[] output)
+        /// <param name="currentContext">
+        /// </param>
+        /// <param name="html">
+        /// </param>
+        /// <param name="jsMarkupRegex">
+        /// </param>
+        /// <param name="jsPreloadRegex">
+        /// The js Preload Regex.
+        /// </param>
+        /// <param name="cssMarkupRegex">
+        /// </param>
+        /// <param name="cssPreloadMarkupRegex">
+        /// The css Preload Markup Regex.
+        /// </param>
+        /// <param name="output">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string ParseHtmlPlaceholders(HttpContextBase currentContext, string html, string jsMarkupRegex, string jsPreloadRegex, string cssMarkupRegex, string cssPreloadMarkupRegex, RendererOutput[] output)
         {
             html = Regex.Replace(html, jsMarkupRegex,
                 (m) =>
@@ -63,6 +75,34 @@ namespace ClientDependency.Core
 
                 }, RegexOptions.Compiled);
 
+            html = Regex.Replace(html, jsPreloadRegex,
+                (m) =>
+                    {
+                        var grp = m.Groups["renderer"];
+                        if (grp != null)
+                        {
+                            if (output.Any())
+                            {
+                                var rendererOutput = output.SingleOrDefault(x => x.Name == grp.ToString());
+
+                                var args = new PlaceholderReplacementEventArgs(currentContext, ClientDependencyType.JavascriptPreload,
+                                    rendererOutput != null ? rendererOutput.OutputJsPreload : "",
+                                    m);
+                                OnPlaceholderReplaced(args);
+
+                                return args.ReplacedText;
+                            }
+                            else
+                            {
+                                //output a message saying that there were no refs
+                                return "<!-- CDF: No JS preload dependencies were declared //-->";   
+                            }                        
+                        }
+                    
+                        return m.ToString();
+
+                    }, RegexOptions.Compiled);
+
             html = Regex.Replace(html, cssMarkupRegex,
                 (m) =>
                 {
@@ -89,6 +129,33 @@ namespace ClientDependency.Core
                     return m.ToString();
 
                 }, RegexOptions.Compiled);
+
+            html = Regex.Replace(html, cssPreloadMarkupRegex,
+                (m) =>
+                    {
+                        var grp = m.Groups["renderer"];
+                        if (grp != null)
+                        {
+                            if (output.Any())
+                            {
+                                var rendererOutput = output.SingleOrDefault(x => x.Name == grp.ToString());
+
+                                var args = new PlaceholderReplacementEventArgs(currentContext, ClientDependencyType.CssPreload,
+                                    rendererOutput != null ? rendererOutput.OutputCssPreload : "",
+                                    m);
+                                OnPlaceholderReplaced(args);
+                                return args.ReplacedText;
+                            }
+                            else
+                            {
+                                //output a message saying that there were no refs
+                                return "<!-- CDF: No CSS Preload dependencies were declared //-->";
+                            }                        
+                        }
+
+                        return m.ToString();
+
+                    }, RegexOptions.Compiled);
 
 
             var replacedArgs = new PlaceholdersReplacedEventArgs(currentContext, html);

@@ -31,7 +31,9 @@ namespace ClientDependency.Core.Mvc
         #region Constants
         public const string ContextKey = "MvcLoader";
         private const string JsMarkupRegex = "<!--\\[Javascript:Name=\"(?<renderer>.*?)\"\\]//-->";
+        private const string JsPreloadMarkupRegex = "<!--\\[JavascriptPreload:Name=\"(?<renderer>.*?)\"\\]//-->";
         private const string CssMarkupRegex = "<!--\\[Css:Name=\"(?<renderer>.*?)\"\\]//-->";
+        private const string CssPreloadMarkupRegex = "<!--\\[CssPreload:Name=\"(?<renderer>.*?)\"\\]//-->";
         #endregion
 
         #region Static methods
@@ -99,7 +101,7 @@ namespace ClientDependency.Core.Mvc
         {
             GenerateOutput();
 
-            return PlaceholderParser.ParseHtmlPlaceholders(CurrentContext, html, JsMarkupRegex, CssMarkupRegex, _output.ToArray());
+            return PlaceholderParser.ParseHtmlPlaceholders(CurrentContext, html, JsMarkupRegex, JsPreloadMarkupRegex, CssMarkupRegex, CssPreloadMarkupRegex, _output.ToArray());
         }
 
         /// <summary>
@@ -148,21 +150,19 @@ namespace ClientDependency.Core.Mvc
             foreach (var x in Dependencies)
             {
                 var renderer = ((BaseRenderer)x.Provider);
-                string js, css;
-                renderer.RegisterDependencies(x.Dependencies, Paths, out js, out css, CurrentContext);
+                string js, jsPreload, css, cssPreload;
+                renderer.RegisterDependencies(x.Dependencies, Paths, out js, out jsPreload, out css, out cssPreload, CurrentContext);
 
                 //store the output in a new output object
                 _output.Add(new RendererOutput()
                 {
                     Name = x.Provider.Name,
                     OutputCss = css,
-                    OutputJs = js
+                    OutputCssPreload = cssPreload,
+                    OutputJs = js,
+                    OutputJsPreload = jsPreload
                 });
             }
         }
-
-        
-
-
     }
 }

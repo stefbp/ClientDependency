@@ -493,6 +493,18 @@ namespace ClientDependency.Core.CompositeFiles.Providers
             int version)
         {
             var url = new StringBuilder();
+
+            switch (type)
+            {
+                //hack : JsPreload and CssPreload should be as Js and Css
+                case ClientDependencyType.CssPreload:
+                    type = ClientDependencyType.Css;
+                    break;
+                case ClientDependencyType.JavascriptPreload:
+                    type = ClientDependencyType.Javascript;
+                    break;
+            }
+
             switch (urlType)
             {
                 case CompositeUrlType.Base64QueryStrings:

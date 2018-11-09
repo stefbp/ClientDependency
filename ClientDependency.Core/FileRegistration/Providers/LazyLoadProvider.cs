@@ -56,6 +56,11 @@ namespace ClientDependency.Core.FileRegistration.Providers
             return sb.ToString();
 		}
 
+	    protected override string RenderJsPreloadDependencies(IEnumerable<IClientDependencyFile> jsPreloadDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes)
+	    {
+	        throw new NotImplementedException();
+	    }
+
 	    protected override void RenderJsComposites(HttpContextBase http, IDictionary<string, string> htmlAttributes, StringBuilder sb, IEnumerable<IClientDependencyFile> dependencies)
         {
             var comp = ClientDependencySettings.Instance.DefaultCompositeFileProcessingProvider.ProcessCompositeList(
@@ -70,6 +75,14 @@ namespace ClientDependency.Core.FileRegistration.Providers
             }
         }
 
+	    protected override string RenderCssPreloadDependencies(
+	        IEnumerable<IClientDependencyFile> cssPreloadDependencies,
+	        HttpContextBase http,
+	        IDictionary<string, string> htmlAttributes)
+	    {
+	        throw new NotImplementedException();
+	    }
+
 	    protected override string RenderSingleJsFile(string js, IDictionary<string, string> htmlAttributes)
 		{
             if(!js.StartsWith("'"))
@@ -81,7 +94,12 @@ namespace ClientDependency.Core.FileRegistration.Providers
             return strClientLoader.ToString();
 		}
 
-        protected override string RenderCssDependencies(IEnumerable<IClientDependencyFile> cssDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes)
+	    protected override string RenderSingleJsPreloadFile(string jsPreload, IDictionary<string, string> htmlAttributes)
+	    {
+	        throw new NotImplementedException();
+	    }
+
+	    protected override string RenderCssDependencies(IEnumerable<IClientDependencyFile> cssDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes)
         {
             var asArray = cssDependencies.ToArray();
 
@@ -134,7 +152,12 @@ namespace ClientDependency.Core.FileRegistration.Providers
             return strClientLoader.ToString();
 		}
 
-        protected override void RegisterDependencies(HttpContextBase http, string js, string css)
+	    protected override string RenderSingleCssPreloadFile(string cssPreload, IDictionary<string, string> htmlAttributes)
+	    {
+	        throw new NotImplementedException();
+	    }
+
+	    protected override void RegisterDependencies(HttpContextBase http, string js, string css)
         {
             if (!(http.CurrentHandler is Page))
             {

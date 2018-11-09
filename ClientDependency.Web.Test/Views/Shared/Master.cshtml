@@ -10,14 +10,16 @@
     </title>
     @RenderSection("HeadContent", false)
 
-    @Html.RenderCssPreloadHere(new BasicPath("Styles", "~/Css"))
+    <!-- RenderJsPreloadHere -->
     @Html.RenderJsPreloadHere(new BasicPath("Scripts", "~/Js"))
 
+    <!-- RenderCssHere -->
     @Html.RenderCssHere(new BasicPath("Styles", "~/Css"))
 </head>
 
 <body>
 
+    <!-- RenderJsHere -->
     @Html.RenderJsHere(new BasicPath("Scripts", "~/Js"))
 
     @{

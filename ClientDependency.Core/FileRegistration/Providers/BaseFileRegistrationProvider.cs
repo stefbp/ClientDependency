@@ -59,6 +59,15 @@ namespace ClientDependency.Core.FileRegistration.Providers
         protected abstract string RenderJsDependencies(IEnumerable<IClientDependencyFile> jsDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes);
 
         /// <summary>
+        /// This is called when rendering many js dependencies
+        /// </summary>
+        /// <param name="jsPreloadDependencies"></param>
+        /// <param name="http"></param>
+        /// <param name="htmlAttributes"></param>
+        /// <returns></returns>
+        protected abstract string RenderJsPreloadDependencies(IEnumerable<IClientDependencyFile> jsPreloadDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes);
+
+        /// <summary>
         /// This is called when rendering many css dependencies
         /// </summary>
         /// <param name="cssDependencies"></param>
@@ -66,6 +75,15 @@ namespace ClientDependency.Core.FileRegistration.Providers
         /// <param name="htmlAttributes"></param>
         /// <returns></returns>
         protected abstract string RenderCssDependencies(IEnumerable<IClientDependencyFile> cssDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes);
+
+        /// <summary>
+        /// This is called when rendering many css dependencies
+        /// </summary>
+        /// <param name="cssPreloadDependencies"></param>
+        /// <param name="http"></param>
+        /// <param name="htmlAttributes"></param>
+        /// <returns></returns>
+        protected abstract string RenderCssPreloadDependencies(IEnumerable<IClientDependencyFile> cssPreloadDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes);
 
         /// <summary>
         /// Called to render a single js file
@@ -76,12 +94,28 @@ namespace ClientDependency.Core.FileRegistration.Providers
         protected abstract string RenderSingleJsFile(string js, IDictionary<string, string> htmlAttributes);
 
         /// <summary>
+        /// Called to render a single js file
+        /// </summary>
+        /// <param name="jsPreload"></param>
+        /// <param name="htmlAttributes"></param>
+        /// <returns></returns>
+        protected abstract string RenderSingleJsPreloadFile(string jsPreload, IDictionary<string, string> htmlAttributes);
+
+        /// <summary>
         /// Called to render a single css file
         /// </summary>
         /// <param name="css"></param>
         /// <param name="htmlAttributes"></param>
         /// <returns></returns>
         protected abstract string RenderSingleCssFile(string css, IDictionary<string, string> htmlAttributes);
+
+        /// <summary>
+        /// Called to render a single css file
+        /// </summary>
+        /// <param name="cssPreload"></param>
+        /// <param name="htmlAttributes"></param>
+        /// <returns></returns>
+        protected abstract string RenderSingleCssPreloadFile(string cssPreload, IDictionary<string, string> htmlAttributes);
 
         #endregion
 
@@ -428,6 +462,8 @@ namespace ClientDependency.Core.FileRegistration.Providers
                     if (attributes.ContainsKey("src"))
                         attributes.Remove("src");
                     break;
+                case ClientDependencyType.JavascriptPreload:
+                    break;
                 case ClientDependencyType.Css:
                     if (!attributes.ContainsKey("type"))
                         attributes.Add("type", "text/css");
@@ -435,6 +471,8 @@ namespace ClientDependency.Core.FileRegistration.Providers
                         attributes.Add("rel", "stylesheet");
                     if (attributes.ContainsKey("href"))
                         attributes.Remove("href");
+                    break;
+                case ClientDependencyType.CssPreload:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -444,20 +482,22 @@ namespace ClientDependency.Core.FileRegistration.Providers
             return attributes;
         }
 
-        
-
         /// <summary>
         /// Called to write the js and css to string output
         /// </summary>
         /// <param name="allDependencies"></param>
         /// <param name="paths"></param>
         /// <param name="jsOutput"></param>
+        /// <param name="jsPreloadOutput"></param>
         /// <param name="cssOutput"></param>
+        /// <param name="cssPreloadOutput"></param>
         /// <param name="http"></param>
         internal void WriteDependencies(List<IClientDependencyFile> allDependencies,
             HashSet<IClientDependencyPath> paths,
             out string jsOutput,
+            out string jsPreloadOutput,
             out string cssOutput,
+            out string cssPreloadOutput,
             HttpContextBase http)
         {
             //create the hash to see if we've already stored it
@@ -487,26 +527,51 @@ namespace ClientDependency.Core.FileRegistration.Providers
             }
 
             var cssBuilder = new StringBuilder();
+            var cssPreloadBuilder = new StringBuilder();
             var jsBuilder = new StringBuilder();
+            var jsPreloadBuilder = new StringBuilder();
 
             //group by the group and order by the value
             foreach (var group in allDependencies.GroupBy(x => x.Group).OrderBy(x => x.Key))
             {
                 //sort both the js and css dependencies properly
 
-                var jsDependencies = DependencySorter.SortItems(
-                    group.Where(x => x.DependencyType == ClientDependencyType.Javascript).ToList());
-
-                var cssDependencies = DependencySorter.SortItems(
-                    group.Where(x => x.DependencyType == ClientDependencyType.Css).ToList());
+                var jsDependencies = DependencySorter.SortItems(group.Where(x => x.DependencyType == ClientDependencyType.Javascript).ToList());
+                var jsPreloadDependencies = DependencySorter.SortItems(group.Where(x => x.DependencyType == ClientDependencyType.Javascript)
+                    .Select(x => (IClientDependencyFile)new JavascriptFile(x.FilePath)
+                                                            {
+                                                                DependencyType = ClientDependencyType.JavascriptPreload,
+                                                                ForceBundle = x.ForceBundle,
+                                                                ForceProvider = x.ForceProvider,
+                                                                Group = x.Group,
+                                                                FilePath = x.FilePath,
+                                                                PathNameAlias = x.PathNameAlias,
+                                                                Priority = x.Priority
+                                                            }).ToList());
+                var cssDependencies = DependencySorter.SortItems(group.Where(x => x.DependencyType == ClientDependencyType.Css).ToList());
+                var cssPreloadDependencies = DependencySorter.SortItems(group.Where(x => x.DependencyType == ClientDependencyType.Css)
+                    .Select(x => (IClientDependencyFile)new CssFile(x.FilePath)
+                                                          {
+                                                              DependencyType = ClientDependencyType.CssPreload,
+                                                              ForceBundle = x.ForceBundle,
+                                                              ForceProvider = x.ForceProvider,
+                                                              Group = x.Group,
+                                                              FilePath = x.FilePath,
+                                                              PathNameAlias = x.PathNameAlias,
+                                                              Priority = x.Priority
+                                                          }).ToList());
 
                 //render
                 WriteStaggeredDependencies(cssDependencies, http, cssBuilder, RenderCssDependencies, RenderSingleCssFile);
+                WriteStaggeredDependencies(cssPreloadDependencies, http, cssPreloadBuilder, this.RenderCssPreloadDependencies, this.RenderSingleCssPreloadFile);
                 WriteStaggeredDependencies(jsDependencies, http, jsBuilder, RenderJsDependencies, RenderSingleJsFile);
+                WriteStaggeredDependencies(jsPreloadDependencies, http, jsPreloadBuilder, this.RenderJsPreloadDependencies, this.RenderSingleJsPreloadFile);
             }
 
             cssOutput = cssBuilder.ToString();
+            cssPreloadOutput = cssPreloadBuilder.ToString();
             jsOutput = jsBuilder.ToString();
+            jsPreloadOutput = jsPreloadBuilder.ToString();
         }
 
         protected virtual void RenderJsComposites(HttpContextBase http, IDictionary<string, string> htmlAttributes, StringBuilder sb, IEnumerable<IClientDependencyFile> dependencies)
@@ -523,6 +588,20 @@ namespace ClientDependency.Core.FileRegistration.Providers
             }
         }
 
+        protected virtual void RenderJsPreloadComposites(HttpContextBase http, IDictionary<string, string> htmlAttributes, StringBuilder sb, IEnumerable<IClientDependencyFile> dependencies)
+        {
+            var comp = ClientDependencySettings.Instance.DefaultCompositeFileProcessingProvider.ProcessCompositeList(
+                dependencies,
+                ClientDependencyType.JavascriptPreload, 
+                http,
+                ClientDependencySettings.Instance.CompositeFileHandlerPath);
+
+            foreach (var s in comp)
+            {
+                sb.Append(RenderSingleJsPreloadFile(s, htmlAttributes));
+            }
+        }
+
         protected virtual void RenderCssComposites(HttpContextBase http, IDictionary<string, string> htmlAttributes, StringBuilder sb, IEnumerable<IClientDependencyFile> dependencies)
         {
             var comp = ClientDependencySettings.Instance.DefaultCompositeFileProcessingProvider.ProcessCompositeList(
@@ -533,7 +612,21 @@ namespace ClientDependency.Core.FileRegistration.Providers
 
             foreach (var s in comp)
             {
-                sb.Append(RenderSingleCssFile(s, htmlAttributes));
+                sb.Append(this.RenderSingleCssFile(s, htmlAttributes));
+            }
+        }
+
+        protected virtual void RenderCssPreloadComposites(HttpContextBase http, IDictionary<string, string> htmlAttributes, StringBuilder sb, IEnumerable<IClientDependencyFile> dependencies)
+        {
+            var comp = ClientDependencySettings.Instance.DefaultCompositeFileProcessingProvider.ProcessCompositeList(
+                dependencies,
+                ClientDependencyType.CssPreload,
+                http,
+                ClientDependencySettings.Instance.CompositeFileHandlerPath);
+
+            foreach (var s in comp)
+            {
+                sb.Append(this.RenderSingleCssPreloadFile(s, htmlAttributes));
             }
         }
     }

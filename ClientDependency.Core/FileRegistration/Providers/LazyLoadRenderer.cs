@@ -142,6 +142,11 @@ namespace ClientDependency.Core.FileRegistration.Providers
             return sb.ToString();
         }
 
+        protected override string RenderJsPreloadDependencies(IEnumerable<IClientDependencyFile> jsPreloadDependencies, HttpContextBase http, IDictionary<string, string> htmlAttributes)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void RenderJsComposites(HttpContextBase http, IDictionary<string, string> htmlAttributes, StringBuilder sb, IEnumerable<IClientDependencyFile> dependencies)
         {
             var comp = ClientDependencySettings.Instance.DefaultCompositeFileProcessingProvider.ProcessCompositeList(
@@ -202,6 +207,14 @@ namespace ClientDependency.Core.FileRegistration.Providers
             return sb.ToString();
         }
 
+        protected override string RenderCssPreloadDependencies(
+            IEnumerable<IClientDependencyFile> cssPreloadDependencies,
+            HttpContextBase http,
+            IDictionary<string, string> htmlAttributes)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void RenderCssComposites(HttpContextBase http, IDictionary<string, string> htmlAttributes, StringBuilder sb, IEnumerable<IClientDependencyFile> dependencies)
         {
             var comp = ClientDependencySettings.Instance.DefaultCompositeFileProcessingProvider.ProcessCompositeList(
@@ -230,6 +243,11 @@ namespace ClientDependency.Core.FileRegistration.Providers
             return string.Format(HtmlEmbedContants.ScriptEmbedWithCode, strClientLoader.ToString());
         }
 
+        protected override string RenderSingleJsPreloadFile(string jsPreload, IDictionary<string, string> htmlAttributes)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override string RenderSingleCssFile(string css, IDictionary<string, string> htmlAttributes)
         {
             var strClientLoader = new StringBuilder("CDLazyLoader");
@@ -237,6 +255,11 @@ namespace ClientDependency.Core.FileRegistration.Providers
             strClientLoader.Append(';');
 
             return string.Format(HtmlEmbedContants.ScriptEmbedWithCode, strClientLoader);
+        }
+
+        protected override string RenderSingleCssPreloadFile(string cssPreload, IDictionary<string, string> htmlAttributes)
+        {
+            throw new NotImplementedException();
         }
     }
 }

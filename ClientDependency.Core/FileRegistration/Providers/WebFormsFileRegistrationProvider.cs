@@ -96,8 +96,10 @@ namespace ClientDependency.Core.FileRegistration.Providers
             HttpContextBase http)
         {
             string js;
+            string jsPreload;
             string css;
-            WriteDependencies(allDependencies, paths, out js, out css, http);
+            string cssPreload;
+            WriteDependencies(allDependencies, paths, out js, out jsPreload, out css, out cssPreload, http);
             RegisterDependencies(http, js, css);
         }
     }

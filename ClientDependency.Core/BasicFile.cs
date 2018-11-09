@@ -23,7 +23,7 @@ namespace ClientDependency.Core
 		#region IClientDependencyFile Members
 
 		public string FilePath { get; set; }
-		public ClientDependencyType DependencyType { get; private set; }
+		public ClientDependencyType DependencyType { get; set; }
 		public int Priority { get; set; }
 		public int Group { get; set; }
 		public string PathNameAlias { get; set; }
@@ -39,7 +39,7 @@ namespace ClientDependency.Core
         /// <remarks>
         /// Mostly used for CSS Media, but could be for anything
         /// </remarks>
-        public IDictionary<string, string> HtmlAttributes { get; private set; }
+        public IDictionary<string, string> HtmlAttributes { get; set; }
 
 		#endregion
 

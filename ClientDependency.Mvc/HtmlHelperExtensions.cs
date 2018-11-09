@@ -271,6 +271,39 @@ namespace ClientDependency.Core.Mvc
                     ClientDependencyType.Javascript, rendererName, Enumerable.Empty<IClientDependencyPath>()));
         } 
         #endregion
+
+        #region RenderJsPreloadHere Extensions
+        public static IHtmlString RenderJsPreloadHere(this HtmlHelper html)
+        {
+            return new HtmlString(
+                html.ViewContext.GetLoader().RenderPlaceholder(
+                    ClientDependencyType.JavascriptPreload, new List<IClientDependencyPath>()));
+        }
+        public static IHtmlString RenderJsPreloadHere(this HtmlHelper html, params IClientDependencyPath[] path)
+        {
+            return new HtmlString(
+                html.ViewContext.GetLoader().RenderPlaceholder(
+                    ClientDependencyType.JavascriptPreload, path));
+        }
+        public static IHtmlString RenderJsPreloadHere(this HtmlHelper html, IEnumerable<IClientDependencyPath> paths)
+        {
+            return new HtmlString(
+                html.ViewContext.GetLoader().RenderPlaceholder(
+                    ClientDependencyType.JavascriptPreload, paths));
+        }
+        public static IHtmlString RenderJsPreloadHere(this HtmlHelper html, string rendererName, IEnumerable<IClientDependencyPath> paths)
+        {
+            return new HtmlString(
+                html.ViewContext.GetLoader().RenderPlaceholder(
+                    ClientDependencyType.JavascriptPreload, rendererName, paths));
+        }
+        public static IHtmlString RenderJsPreloadHere(this HtmlHelper html, string rendererName)
+        {
+            return new HtmlString(
+                html.ViewContext.GetLoader().RenderPlaceholder(
+                    ClientDependencyType.JavascriptPreload, rendererName, Enumerable.Empty<IClientDependencyPath>()));
+        } 
+        #endregion
         
         #region RenderCssHere Extensions
         public static IHtmlString RenderCssHere(this HtmlHelper html)
@@ -297,6 +330,34 @@ namespace ClientDependency.Core.Mvc
         {
             return new HtmlString(html.ViewContext.GetLoader().RenderPlaceholder(
                 ClientDependencyType.Css, rendererName, paths));
+        } 
+        #endregion
+
+        #region RenderCssPreloadHere Extensions
+        public static IHtmlString RenderCssPreloadHere(this HtmlHelper html)
+        {
+            return new HtmlString(html.ViewContext.GetLoader().RenderPlaceholder(
+                ClientDependencyType.CssPreload, new List<IClientDependencyPath>()));
+        }
+        public static IHtmlString RenderCssPreloadHere(this HtmlHelper html, params IClientDependencyPath[] path)
+        {
+            return new HtmlString(html.ViewContext.GetLoader().RenderPlaceholder(
+                ClientDependencyType.CssPreload, path));
+        }
+        public static IHtmlString RenderCssPreloadHere(this HtmlHelper html, IEnumerable<IClientDependencyPath> paths)
+        {
+            return new HtmlString(html.ViewContext.GetLoader().RenderPlaceholder(
+                ClientDependencyType.CssPreload, paths));
+        }
+        public static IHtmlString RenderCssPreloadHere(this HtmlHelper html, string rendererName, IEnumerable<IClientDependencyPath> paths)
+        {
+            return new HtmlString(html.ViewContext.GetLoader().RenderPlaceholder(
+                ClientDependencyType.CssPreload, rendererName, paths));
+        }
+        public static IHtmlString RenderCssPreloadHere(this HtmlHelper html, string rendererName, params IClientDependencyPath[] paths)
+        {
+            return new HtmlString(html.ViewContext.GetLoader().RenderPlaceholder(
+                ClientDependencyType.CssPreload, rendererName, paths));
         } 
         #endregion
 

@@ -9,6 +9,6 @@ namespace ClientDependency.Core
 	/// </summary>
 	public enum ClientDependencyType
 	{
-		Javascript, Css
+		Javascript, JavascriptPreload, Css, CssPreload
 	}
 }

@@ -9,6 +9,10 @@
         @RenderSection("TitleContent")
     </title>
     @RenderSection("HeadContent", false)
+
+    @Html.RenderCssPreloadHere(new BasicPath("Styles", "~/Css"))
+    @Html.RenderJsPreloadHere(new BasicPath("Scripts", "~/Js"))
+
     @Html.RenderCssHere(new BasicPath("Styles", "~/Css"))
 </head>
 

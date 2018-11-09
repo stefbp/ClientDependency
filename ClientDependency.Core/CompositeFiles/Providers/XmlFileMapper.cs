@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -24,27 +25,61 @@ namespace ClientDependency.Core.CompositeFiles.Providers
     {
 
         public const string DefaultName = "XmlFileMap";
-
         private const string MapFileName = "map.xml";
+        private const string DefaultFileMapFolder = "~/App_Data/ClientDependency";
 
         private XDocument _doc;
         private FileInfo _xmlFile;
         
-        private const string FileMapVirtualFolderDefault = "~/App_Data/ClientDependency";        
         private static readonly object Locker = new object();
+        private static string _fileMapFolder = DefaultFileMapFolder;
+        private static bool _dynamicallyConfiguredPath = false;
+
+        [Obsolete("Use FileMapDefaultFolder instead")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static string FileMapVirtualFolder = DefaultFileMapFolder;
 
         /// <summary>
-        /// Specifies the default folder to store the file map in, this allows for dynamically changing the folder on startup
+        /// Specifies the default folder to store the file map in, either absolute or virtual 
         /// </summary>
-        public static string FileMapVirtualFolder = FileMapVirtualFolderDefault;
+        /// <remarks>
+        /// allows for dynamically changing the folder on startup
+        /// </remarks>
+        public static string FileMapDefaultFolder
+        {
+            get { return _fileMapFolder; }
+            set
+            {
+                _fileMapFolder = value;
+                _dynamicallyConfiguredPath = true;
+            }
+        }
 
-        private DirectoryInfo XmlMapFolder { get; set; }
+        public string FileMapFolder { get; private set; }
+
+        private DirectoryInfo _xmlMapFolder;
+
+        public XmlFileMapper()
+        {
+            //here we need to do a backwards compat check
+            if (FileMapVirtualFolder != DefaultFileMapFolder)
+            {
+                //in this case, the legacy FileMapVirtualFolder was updated which means that we need to change
+                //the non-legacy FileMapDefaultFolder value
+                FileMapDefaultFolder = FileMapVirtualFolder;
+            }
+
+            FileMapFolder = FileMapDefaultFolder;
+        }
 
         public override void Initialize(HttpContextBase http)
         {
             if (http == null) throw new ArgumentNullException("http");
 
-            XmlMapFolder = new DirectoryInfo(http.Server.MapPath(FileMapVirtualFolder));    
+            //check for a virtual path before MapPath
+            _xmlMapFolder = FileMapFolder.StartsWith("~/")
+                ? new DirectoryInfo(http.Server.MapPath(FileMapFolder))
+                : new DirectoryInfo(FileMapFolder);
 
             //Name the map file according to the machine name
             _xmlFile = new FileInfo(GetXmlMapPath());
@@ -78,15 +113,12 @@ namespace ClientDependency.Core.CompositeFiles.Providers
 
             if (config["mapPath"] != null)
             {
-                //use the config setting if it has not been dynamically set OR
-                //when the config section doesn't equal the default
-                if (FileMapVirtualFolder == FileMapVirtualFolderDefault
-                    || config["mapPath"] != FileMapVirtualFolderDefault)
+                //use the config setting if it has not been dynamically set
+                if (!_dynamicallyConfiguredPath)
                 {
-                    FileMapVirtualFolder = config["mapPath"];   
-                }                
+                    FileMapFolder = config["mapPath"];
+                }
             }
-
         }
 
         /// <summary>
@@ -322,7 +354,7 @@ namespace ClientDependency.Core.CompositeFiles.Providers
         /// <returns></returns>
         private string GetXmlMapPath()
         {
-            var folder = XmlMapFolder.FullName;
+            var folder = _xmlMapFolder.FullName;
             var folderHash = folder.GenerateHash();
             return Path.Combine(folder, NetworkHelper.FileSafeMachineName + "-" + folderHash + "-" + MapFileName);
         }
@@ -359,8 +391,8 @@ namespace ClientDependency.Core.CompositeFiles.Providers
                     //double check
                     if (!File.Exists(_xmlFile.FullName))
                     {
-                        if (!XmlMapFolder.Exists)
-                            XmlMapFolder.Create();
+                        if (!_xmlMapFolder.Exists)
+                            _xmlMapFolder.Create();
                         CreateNewXmlFile();
                     }
                 }

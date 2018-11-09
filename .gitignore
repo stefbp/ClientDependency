@@ -14,3 +14,9 @@ ClientDependency.sln.DotSettings.user
 ClientDependency.Web.Test/Css/Inuit/*
 *.orig
 .ClientDependency.boltdata/*
+/.vs/*
+/ClientDependency.Web.Test/App_Data/logs/*
+/build/Release/*
+/build/tmp/*
+/build/nuget.exe
+/build/vswhere.exe
